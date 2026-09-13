@@ -1,0 +1,35 @@
+{
+  "name": "rubick-tencent-ocr",
+  "pluginName": "腾讯OCR",
+  "pluginType": "ui",
+  "description": "腾讯云通用OCR识别：图片/截图识别文本并复制",
+  "author": "local",
+  "main": "index.html",
+  "logo": "logo.png",
+  "version": "0.1.1",
+  "preload": "preload.js",
+  "homePage": "https://cloud.tencent.com/product/ocr",
+  "features": [
+    {
+      "code": "ocr",
+      "explain": "腾讯云OCR图片识别文本",
+      "cmds": [
+        "腾讯ocr",
+        "腾讯识别",
+        "tocr",
+        {
+          "type": "img",
+          "label": "腾讯ocr"
+        },
+        {
+          "type": "files",
+          "label": "腾讯ocr",
+          "fileType": "file",
+          "match": "/.(png|jpe?g|bmp|webp)$/",
+          "minNum": 1,
+          "maxNum": 1
+        }
+      ]
+    }
+  ]
+}

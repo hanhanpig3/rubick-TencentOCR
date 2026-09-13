@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>腾讯OCR</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #1f2329;
+    --text-sub: #8a919f;
+    --border: #e8eaf0;
+    --primary: #006eff;
+    --primary-soft: #e6f0ff;
+    --danger: #ef4f4f;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #252533;
+      --text: #e8eaf0;
+      --text-sub: #9aa1ad;
+      --border: #38384a;
+      --primary-soft: #1c2a44;
+      --danger: #ff7875;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    overflow: hidden;
+  }
+  .app { display: flex; flex-direction: column; height: 100vh; }
+  .head-menu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+  }
+  .type-title {
+    font-size: 13px;
+    color: var(--primary);
+    background: var(--primary-soft);
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+  .flex { flex: 1; }
+  .tool {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: filter .15s;
+  }
+  .tool:hover { filter: brightness(.95); background: var(--primary-soft); border-color: var(--primary); }
+  .tool.primary { background: linear-gradient(135deg, #2f7bff, #006eff); color: #fff; border: none; font-weight: 600; }
+  .main-content {
+    flex: 1;
+    display: flex;
+    gap: 12px;
+    padding: 0 16px;
+    min-height: 0;
+  }
+  .img-box {
+    width: 46%;
+    max-width: 320px;
+    flex: none;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    background: var(--primary-soft);
+    min-height: 0;
+  }
+  .img-box.has-img { border-style: solid; }
+  .img-box img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+  .placeholder { text-align: center; color: var(--text-sub); padding: 20px; }
+  .placeholder .big { font-size: 44px; margin-bottom: 10px; opacity: .8; }
+  .placeholder div { line-height: 1.7; font-size: 12px; }
+  .clear-img {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0,0,0,.45);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    padding: 4px 9px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .right-box { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .right-box textarea {
+    flex: 1;
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text);
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+    font-family: inherit;
+  }
+  .right-box textarea:focus { border-color: var(--primary); }
+  .status {
+    padding: 8px 16px 12px;
+    font-size: 12px;
+    color: var(--text-sub);
+    min-height: 18px;
+  }
+  .status.error { color: var(--danger); }
+  .status.ok { color: #2bb673; }
+  /* modals */
+  .mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  .mask[hidden] { display: none; }
+  .modal {
+    width: 420px;
+    max-width: 92vw;
+    max-height: 86vh;
+    overflow-y: auto;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.2);
+  }
+  .modal h3 { font-size: 15px; margin-bottom: 14px; }
+  .modal label.field { display: block; font-size: 12px; color: var(--text-sub); margin: 10px 0 4px; }
+  .modal input[type=text], .modal input[type=password] {
+    width: 100%;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    padding: 0 10px;
+    font-size: 13px;
+    outline: none;
+  }
+  .modal input:focus { border-color: var(--primary); }
+  .modal .radios { display: flex; gap: 16px; margin-top: 6px; font-size: 13px; }
+  .modal .radios label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  .modal .check-row { margin-top: 10px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .modal-actions { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+  /* toast */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 40px;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,.82);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    z-index: 50;
+    max-width: 90%;
+    word-break: break-all;
+  }
+  /* history */
+  .hist-item {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .hist-item:hover { border-color: var(--primary); }
+  .hist-item .h-result { font-size: 12px; white-space: pre-wrap; word-break: break-word; max-height: 80px; overflow: hidden; }
+  .hist-item .h-time { font-size: 10px; color: var(--text-sub); margin-top: 4px; }
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="head-menu">
+      <span class="type-title" id="typeTitle">高精度文字识别</span>
+      <span class="flex"></span>
+      <button class="tool" id="captureBtn" hidden>截图</button>
+      <button class="tool" id="copyBtn" hidden>复制</button>
+      <button class="tool" id="mergeBtn" hidden>合并行</button>
+      <button class="tool" id="histBtn" hidden>历史</button>
+      <button class="tool" id="settingBtn">设置</button>
+    </div>
+
+    <div class="main-content">
+      <div class="img-box" id="imgBox">
+        <div class="placeholder" id="placeholder">
+          <div class="big">🖼️</div>
+          <div>拖拽图片到这里<br/>粘贴 (Ctrl+V) · 点击选择 · 截图识别</div>
+        </div>
+        <img id="img" alt="" hidden />
+        <button class="clear-img" id="clearImg" hidden>✕ 清除</button>
+      </div>
+      <div class="right-box">
+        <textarea id="result" placeholder="识别结果将显示在这里…"></textarea>
+      </div>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <!-- 设置 -->
+  <div class="mask" id="settingsMask" hidden>
+    <div class="modal">
+      <h3>设置 · 腾讯云OCR</h3>
+      <label class="field">SecretId（控制台 → 访问管理 → API密钥管理）</label>
+      <input id="cfgId" type="text" placeholder="AKIDxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" />
+      <label class="field">SecretKey</label>
+      <input id="cfgKey" type="password" placeholder="请输入 SecretKey" />
+      <label class="field">Region（接口地域）</label>
+      <input id="cfgRegion" type="text" list="regionList" autocomplete="off" />
+      <datalist id="regionList">
+        <option value="ap-guangzhou">广州</option>
+        <option value="ap-beijing">北京</option>
+        <option value="ap-shanghai">上海</option>
+        <option value="ap-shenzhen-fsi">深圳(金融)</option>
+        <option value="ap-nanjing">南京</option>
+        <option value="ap-chengdu">成都</option>
+        <option value="ap-chongqing">重庆</option>
+        <option value="ap-tokyo">东京</option>
+        <option value="na-siliconvalley">硅谷</option>
+        <option value="na-ashburn">弗吉尼亚</option>
+        <option value="eu-frankfurt">法兰克福</option>
+      </datalist>
+      <label class="field">识别类型</label>
+      <div class="radios">
+        <label><input type="radio" name="rtype" value="print" /> 高精度文字识别（印刷体）</label>
+        <label><input type="radio" name="rtype" value="handwrite" /> 通用手写体识别</label>
+      </div>
+      <label class="check-row"><input type="checkbox" id="cfgHistory" /> 保存识别历史</label>
+      <div class="modal-actions">
+        <button class="tool" id="testBtn">测试连接</button>
+        <span class="flex"></span>
+        <button class="tool" id="cancelSetting">取消</button>
+        <button class="tool primary" id="saveSetting">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 历史 -->
+  <div class="mask" id="historyMask" hidden>
+    <div class="modal">
+      <h3>识别历史</h3>
+      <div id="histList" style="max-height:60vh;overflow-y:auto"></div>
+      <div class="modal-actions">
+        <span class="flex"></span>
+        <button class="tool" id="clearHist">清空历史</button>
+        <button class="tool" id="closeHist">关闭</button>
+      </div>
+    </div>
+  </div>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var CFG_KEY = 'rubick-tencent-ocr-config';
+  var HIST_KEY = 'rubick-tencent-ocr-history';
+
+  function hasRubick() {
+    return typeof window.rubick !== 'undefined' && window.rubick;
+  }
+  function db() {
+    if (hasRubick() && window.rubick.dbStorage) return window.rubick.dbStorage;
+    return null;
+  }
+  function dbGet(k, fallback) {
+    try {
+      if (db()) {
+        var v = db().getItem(k);
+        if (v != null) return v;
+      }
+      var raw = localStorage.getItem(k);
+      if (raw != null) return JSON.parse(raw);
+    } catch (e) {}
+    return fallback;
+  }
+  function dbSet(k, v) {
+    try {
+      if (db()) {
+        db().setItem(k, v);
+        localStorage.setItem(k, JSON.stringify(v));
+        return;
+      }
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch (e) {}
+  }
+
+  var defaults = {
+    secretId: '',
+    secretKey: '',
+    region: 'ap-guangzhou',
+    type: 'print',
+    history: true,
+    historyLength: 10,
+  };
+  if (window.TC_OCR_CONFIG) {
+    defaults.secretId = window.TC_OCR_CONFIG.secretId || '';
+    defaults.secretKey = window.TC_OCR_CONFIG.secretKey || '';
+    defaults.region = window.TC_OCR_CONFIG.region || 'ap-guangzhou';
+    defaults.type = window.TC_OCR_CONFIG.type === 'handwrite' ? 'handwrite' : 'print';
+  }
+
+  var config = Object.assign({}, defaults, dbGet(CFG_KEY, {}));
+  var historys = Array.isArray(dbGet(HIST_KEY, [])) ? dbGet(HIST_KEY, []) : [];
+  var currentSrc = ''; // dataURL or file path for history preview
+
+  /* ---------- utils ---------- */
+  var toastTimer = null;
+  function toast(msg, isError) {
+    var el = document.querySelector('.toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'toast';
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.style.background = isError ? 'rgba(190,40,40,.92)' : 'rgba(0,0,0,.82)';
+    el.style.display = 'block';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.style.display = 'none'; }, 2600);
+  }
+  function setStatus(msg, cls) {
+    var el = document.getElementById('status');
+    el.textContent = msg || '';
+    el.className = 'status' + (cls ? ' ' + cls : '');
+  }
+  function setImg(dataUrl) {
+    currentSrc = dataUrl;
+    var img = document.getElementById('img');
+    var box = document.getElementById('imgBox');
+    img.src = dataUrl;
+    img.hidden = false;
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('clearImg').hidden = false;
+    box.classList.add('has-img');
+  }
+  function clearImg() {
+    currentSrc = '';
+    document.getElementById('img').hidden = true;
+    document.getElementById('placeholder').style.display = '';
+    document.getElementById('clearImg').hidden = true;
+    document.getElementById('imgBox').classList.remove('has-img');
+  }
+  function setResult(txt) {
+    document.getElementById('result').value = txt;
+    document.getElementById('copyBtn').hidden = !txt;
+    document.getElementById('mergeBtn').hidden = !txt;
+  }
+  function applyTypeTitle() {
+    document.getElementById('typeTitle').textContent =
+      config.type === 'handwrite' ? '通用手写体识别' : '高精度文字识别';
+  }
+
+  /* ---------- recognize ---------- */
+  function recognizeBase64(b64) {
+    if (!window.tcOcr) { toast('插件环境异常：未加载 tcOcr', true); return; }
+    var id = (config.secretId || '').trim();
+    var key = (config.secretKey || '').trim();
+    if (!id || !key) {
+      toast('请先点右上角「设置」填写腾讯云 SecretId / SecretKey', true);
+      return;
+    }
+    setStatus('识别中…');
+    window.tcOcr.recognize({
+      secretId: id,
+      secretKey: key,
+      region: (config.region || 'ap-guangzhou').trim(),
+      imageBase64: b64,
+      type: config.type,
+    }).then(function (resp) {
+      var txt = window.tcOcr.textOf(resp);
+      setResult(txt);
+      setStatus(txt ? '识别完成' : '识别完成（无文字）', 'ok');
+      if (config.history && txt) pushHistory(currentSrc, txt);
+    }).catch(function (e) {
+      setStatus('');
+      toast('识别失败：' + (e && e.message || e), true);
+    });
+  }
+  function recognizeFromDataUrl(dataUrl) {
+    var b64 = dataUrl;
+    if (dataUrl.indexOf('base64,') >= 0) b64 = dataUrl.split('base64,')[1];
+    else if (dataUrl.indexOf(',') >= 0) b64 = dataUrl.split(',')[1];
+    recognizeBase64(b64);
+  }
+  function recognizeFromFilePath(filePath) {
+    if (!window.tcOcr) return;
+    setStatus('读取图片…');
+    try {
+      var b64 = window.tcOcr.readImageFile(filePath);
+      setStatus('识别中…');
+      window.tcOcr.recognize({
+        secretId: (config.secretId || '').trim(),
+        secretKey: (config.secretKey || '').trim(),
+        region: (config.region || 'ap-guangzhou').trim(),
+        imageBase64: b64,
+        type: config.type,
+      }).then(function (resp) {
+        var txt = window.tcOcr.textOf(resp);
+        setResult(txt);
+        setStatus(txt ? '识别完成' : '识别完成（无文字）', 'ok');
+        if (config.history && txt) pushHistory(filePath, txt);
+      }).catch(function (e) {
+        setStatus('');
+        toast('识别失败：' + (e && e.message || e), true);
+      });
+    } catch (e) {
+      setStatus('');
+      toast('读取图片失败：' + e.message, true);
+    }
+  }
+
+  /* ---------- history ---------- */
+  function pushHistory(src, result) {
+    var item = { src: src, result: result, time: new Date().toLocaleString() };
+    historys = [item].concat(historys);
+    if (historys.length > (config.historyLength || 10)) historys = historys.slice(0, config.historyLength);
+    dbSet(HIST_KEY, historys);
+    document.getElementById('histBtn').hidden = !historys.length;
+  }
+  function renderHistory() {
+    var el = document.getElementById('histList');
+    if (!historys.length) {
+      el.innerHTML = '<div style="color:var(--text-sub);text-align:center;padding:20px">暂无历史</div>';
+      return;
+    }
+    el.innerHTML = historys.map(function (h, i) {
+      return '<div class="hist-item" data-i="' + i + '">' +
+        '<div class="h-result">' + escapeHtml(h.result) + '</div>' +
+        '<div class="h-time">' + escapeHtml(h.time) + ' · 点击恢复</div></div>';
+    }).join('');
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  /* ---------- image input ---------- */
+  function readFileAsDataURL(file, cb) {
+    var r = new FileReader();
+    r.onload = function () { cb(r.result); };
+    r.readAsDataURL(file);
+  }
+
+  /* ---------- rubick hooks ---------- */
+  function bindRubickHooks() {
+    if (!hasRubick()) return;
+    if (window.rubick.onPluginEnter) {
+      window.rubick.onPluginEnter(function (data) {
+        data = data || {};
+        var payload = data.payload;
+        if (data.type === 'files' && Array.isArray(payload) && payload.length) {
+          var f = payload[0];
+          if (f && f.path) {
+            setStatus('识别中…');
+            try {
+              setImg('file://' + f.path);
+            } catch (e) {}
+            recognizeFromFilePath(f.path);
+          }
+          return;
+        }
+        if (data.type === 'img' && typeof payload === 'string') {
+          setImg(payload);
+          recognizeFromDataUrl(payload);
+          return;
+        }
+        // 纯文本进入：等待用户粘贴/拖拽/截图
+        document.getElementById('result').focus();
+      });
+    }
+    if (window.rubick.onPluginReady) {
+      window.rubick.onPluginReady(function () {
+        // 首次就绪：主动设置窗口高度，即使窗口隐藏也会让 rubick 重建 view 尺寸
+        try { window.rubick.setExpendHeight(560); } catch (e) {}
+        // Electron/Chromium BrowserView 在窗口隐藏后可能不重绘（白屏），
+        // 在可见后再强制一次尺寸设置 + 回流，触发重绘。
+        repeatedlyRepaint();
+      });
+    }
+    // 截图按钮仅在 rubick 支持时显示
+    if (window.rubick.screenCapture) {
+      document.getElementById('captureBtn').hidden = false;
+    }
+  }
+
+  var __repaintTimer = null;
+  function repeatedlyRepaint() {
+    var attempts = 0;
+    function kick() {
+      attempts++;
+      try {
+        // 强制一次回流，触发 Chromium 重排
+        void document.body.offsetHeight;
+        // 设置窗口高度会让 rubick 主进程重建 BrowserView 尺寸 -> 强制重绘
+        if (hasRubick()) window.rubick.setExpendHeight(560);
+      } catch (e) {}
+      if (document.visibilityState === 'hidden' && attempts < 30) {
+        // 窗口还隐藏着（首次打开 rubick 常见），等它显示后再补一次尺寸更新
+        __repaintTimer = setTimeout(kick, 200);
+      }
+    }
+    kick();
+    // 无论窗口状态如何，再加几次稳妥的延迟兜底
+    setTimeout(kick, 300);
+    setTimeout(kick, 900);
+    setTimeout(function () { __repaintTimer = null; }, 3000);
+  }
+
+  /* ---------- settings ---------- */
+  function openSettings() {
+    document.getElementById('cfgId').value = config.secretId || '';
+    document.getElementById('cfgKey').value = config.secretKey || '';
+    document.getElementById('cfgRegion').value = config.region || 'ap-guangzhou';
+    var radios = document.querySelectorAll('input[name=rtype]');
+    for (var i = 0; i < radios.length; i++) {
+      radios[i].checked = radios[i].value === (config.type || 'print');
+    }
+    document.getElementById('cfgHistory').checked = !!config.history;
+    document.getElementById('settingsMask').hidden = false;
+  }
+  function saveSettings() {
+    config.secretId = document.getElementById('cfgId').value.trim();
+    config.secretKey = document.getElementById('cfgKey').value.trim();
+    config.region = document.getElementById('cfgRegion').value.trim() || 'ap-guangzhou';
+    var radios = document.querySelectorAll('input[name=rtype]');
+    for (var i = 0; i < radios.length; i++) {
+      if (radios[i].checked) config.type = radios[i].value;
+    }
+    config.history = document.getElementById('cfgHistory').checked;
+    dbSet(CFG_KEY, config);
+    applyTypeTitle();
+    document.getElementById('settingsMask').hidden = true;
+    toast('设置已保存');
+  }
+  function testConnection() {
+    var id = document.getElementById('cfgId').value.trim();
+    var key = document.getElementById('cfgKey').value.trim();
+    var region = document.getElementById('cfgRegion').value.trim() || 'ap-guangzhou';
+    if (!id || !key) { toast('请先填写 SecretId / SecretKey', true); return; }
+    setStatus('正在测试连接…');
+    window.tcOcr.recognize({
+      secretId: id, secretKey: key, region: region,
+      imageBase64: '', type: 'print',
+    }).then(function () {
+      toast('连接成功');
+    }).catch(function (e) {
+      var msg = (e && e.message) || String(e);
+      if (/^Auth/i.test(msg)) {
+        toast('密钥或签名有误：' + msg, true);
+      } else {
+        toast('连接正常（密钥有效），接口返回：' + msg);
+      }
+    });
+  }
+
+  /* ---------- events ---------- */
+  function bindEvents() {
+    var imgBox = document.getElementById('imgBox');
+    var fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+    fileInput.addEventListener('change', function () {
+      if (this.files && this.files[0]) {
+        var f = this.files[0];
+        readFileAsDataURL(f, function (dataUrl) {
+          setImg(dataUrl);
+          recognizeFromDataUrl(dataUrl);
+        });
+      }
+      this.value = '';
+    });
+    imgBox.addEventListener('click', function () { fileInput.click(); });
+    imgBox.addEventListener('dragover', function (e) { e.preventDefault(); });
+    imgBox.addEventListener('drop', function (e) {
+      e.preventDefault();
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        var f = e.dataTransfer.files[0];
+        readFileAsDataURL(f, function (dataUrl) {
+          setImg(dataUrl);
+          recognizeFromDataUrl(dataUrl);
+        });
+      }
+    });
+    document.addEventListener('paste', function (e) {
+      var items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type && items[i].type.indexOf('image') === 0) {
+          var file = items[i].getAsFile();
+          if (file) {
+            e.preventDefault();
+            readFileAsDataURL(file, function (dataUrl) {
+              setImg(dataUrl);
+              recognizeFromDataUrl(dataUrl);
+            });
+          }
+          break;
+        }
+      }
+    });
+
+    document.getElementById('clearImg').addEventListener('click', function (e) {
+      e.stopPropagation();
+      clearImg();
+      setResult('');
+      setStatus('');
+    });
+    document.getElementById('captureBtn').addEventListener('click', function () {
+      if (window.rubick && window.rubick.screenCapture) {
+        window.rubick.screenCapture(function (dataUrl) {
+          setImg(dataUrl);
+          recognizeFromDataUrl(dataUrl);
+        });
+      }
+    });
+    document.getElementById('copyBtn').addEventListener('click', function () {
+      var txt = document.getElementById('result').value;
+      if (!txt) return;
+      if (typeof window.copyText === 'function') window.copyText(txt);
+      else if (window.rubick && window.rubick.copyText) window.rubick.copyText(txt);
+      else if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(function () {});
+      toast('已复制');
+    });
+    document.getElementById('mergeBtn').addEventListener('click', function () {
+      var area = document.getElementById('result');
+      area.value = area.value.replace(/\n+/g, '');
+      setStatus('已合并为一行', 'ok');
+    });
+    document.getElementById('settingBtn').addEventListener('click', openSettings);
+    document.getElementById('saveSetting').addEventListener('click', saveSettings);
+    document.getElementById('cancelSetting').addEventListener('click', function () {
+      document.getElementById('settingsMask').hidden = true;
+    });
+    document.getElementById('testBtn').addEventListener('click', testConnection);
+    document.getElementById('histBtn').addEventListener('click', function () {
+      renderHistory();
+      document.getElementById('historyMask').hidden = false;
+    });
+    document.getElementById('closeHist').addEventListener('click', function () {
+      document.getElementById('historyMask').hidden = true;
+    });
+    document.getElementById('clearHist').addEventListener('click', function () {
+      historys = [];
+      dbSet(HIST_KEY, historys);
+      renderHistory();
+      document.getElementById('histBtn').hidden = true;
+    });
+    document.getElementById('histList').addEventListener('click', function (e) {
+      var item = e.target.closest('.hist-item');
+      if (!item) return;
+      var h = historys[parseInt(item.getAttribute('data-i'), 10)];
+      if (!h) return;
+      if (h.src && /^data:/.test(h.src)) setImg(h.src);
+      setResult(h.result);
+      document.getElementById('historyMask').hidden = true;
+    });
+  }
+
+  function init() {
+    applyTypeTitle();
+    document.getElementById('histBtn').hidden = !historys.length;
+    document.getElementById('copyBtn').hidden = true;
+    document.getElementById('mergeBtn').hidden = true;
+    bindEvents();
+    bindRubickHooks();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
