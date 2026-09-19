@@ -2,33 +2,82 @@
   "name": "rubick-tencent-ocr",
   "pluginName": "腾讯OCR",
   "pluginType": "ui",
-  "description": "腾讯云通用OCR识别：图片/截图识别文本并复制",
+  "description": "腾讯云 OCR：高精度文字/手写体/表格/发票/身份证/银行卡/车牌等多类型识别，表格结果可粘到 Excel 保留格式",
   "author": "local",
   "main": "index.html",
   "logo": "logo.png",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "preload": "preload.js",
   "homePage": "https://cloud.tencent.com/product/ocr",
   "features": [
     {
       "code": "ocr",
-      "explain": "腾讯云OCR图片识别文本",
+      "explain": "腾讯云OCR文字识别（高精度/手写体）",
       "cmds": [
         "腾讯ocr",
         "腾讯识别",
         "tocr",
-        {
-          "type": "img",
-          "label": "腾讯ocr"
-        },
-        {
-          "type": "files",
-          "label": "腾讯ocr",
-          "fileType": "file",
-          "match": "/.(png|jpe?g|bmp|webp)$/",
-          "minNum": 1,
-          "maxNum": 1
-        }
+        "ocr",
+        { "type": "img", "label": "腾讯ocr" },
+        { "type": "files", "label": "腾讯ocr", "fileType": "file", "match": "/.(png|jpe?g|bmp|webp)$/", "minNum": 1, "maxNum": 1 }
+      ]
+    },
+    {
+      "code": "table",
+      "explain": "表格识别，结果可粘到 Excel 保留格式",
+      "cmds": [
+        "表格识别",
+        "腾讯表格",
+        "ocr-table",
+        "tableocr",
+        { "type": "img", "label": "表格识别" },
+        { "type": "files", "label": "表格识别", "fileType": "file", "match": "/.(png|jpe?g|bmp|webp)$/", "minNum": 1, "maxNum": 1 }
+      ]
+    },
+    {
+      "code": "invoice",
+      "explain": "增值税发票识别",
+      "cmds": [
+        "发票识别",
+        "腾讯发票",
+        "ocr-invoice",
+        "invoiceocr",
+        { "type": "img", "label": "发票识别" },
+        { "type": "files", "label": "发票识别", "fileType": "file", "match": "/.(png|jpe?g|bmp|webp)$/", "minNum": 1, "maxNum": 1 }
+      ]
+    },
+    {
+      "code": "idCard",
+      "explain": "身份证识别",
+      "cmds": [
+        "身份证识别",
+        "腾讯身份证",
+        "ocr-idcard",
+        "idocr",
+        { "type": "img", "label": "身份证识别" },
+        { "type": "files", "label": "身份证识别", "fileType": "file", "match": "/.(png|jpe?g|bmp|webp)$/", "minNum": 1, "maxNum": 1 }
+      ]
+    },
+    {
+      "code": "bankCard",
+      "explain": "银行卡识别",
+      "cmds": [
+        "银行卡识别",
+        "腾讯银行卡",
+        "ocr-bankcard",
+        { "type": "img", "label": "银行卡识别" },
+        { "type": "files", "label": "银行卡识别", "fileType": "file", "match": "/.(png|jpe?g|bmp|webp)$/", "minNum": 1, "maxNum": 1 }
+      ]
+    },
+    {
+      "code": "licensePlate",
+      "explain": "车牌识别",
+      "cmds": [
+        "车牌识别",
+        "腾讯车牌",
+        "ocr-plate",
+        { "type": "img", "label": "车牌识别" },
+        { "type": "files", "label": "车牌识别", "fileType": "file", "match": "/.(png|jpe?g|bmp|webp)$/", "minNum": 1, "maxNum": 1 }
       ]
     }
   ]

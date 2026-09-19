@@ -1,0 +1,19 @@
+# 不需要发 npm 的文件
+# (package.json 的 files 字段是白名单，这里作为双重保险)
+
+# 开发文件
+.vscode/
+.idea/
+*.log
+.DS_Store
+Thumbs.db
+
+# Git 内部
+.git/
+.gitignore
+.gitattributes
+
+# 测试/构建产物
+coverage/
+.nyc_output/
+*.map

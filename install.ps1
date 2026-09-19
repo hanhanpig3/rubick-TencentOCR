@@ -1,9 +1,12 @@
 # ============================================================
 #  rubick-tencent-ocr (腾讯OCR) one-click install for rubick
-#  v0.1.1 — 修复 Logo 绝对路径 + 同步 package.json 依赖
+#  v0.2.0 — 多类型 OCR + 表格粘 Excel + 多格式导出
 #
 #  Usage: right-click -> "Run with PowerShell", or:
 #    powershell -ExecutionPolicy Bypass -File .\install.ps1
+#
+#  生产环境推荐用 npm 安装（根治市场依赖冲突）：
+#    npm install -g rubick-tencent-ocr
 # ============================================================
 $ErrorActionPreference = 'Stop'
 

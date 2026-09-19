@@ -13,6 +13,7 @@
     --primary: #006eff;
     --primary-soft: #e6f0ff;
     --danger: #ef4f4f;
+    --ok: #2bb673;
     --radius: 10px;
   }
   @media (prefers-color-scheme: dark) {
@@ -23,6 +24,7 @@
       --border: #38384a;
       --primary-soft: #1c2a44;
       --danger: #ff7875;
+      --ok: #49cc90;
     }
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -38,40 +40,49 @@
   .head-menu {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
+    gap: 6px;
+    padding: 10px 14px;
+    flex-wrap: wrap;
   }
-  .type-title {
-    font-size: 13px;
-    color: var(--primary);
+  .type-select {
+    border: 1px solid var(--border);
     background: var(--primary-soft);
-    padding: 3px 10px;
-    border-radius: 999px;
+    color: var(--text);
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 12px;
     font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    max-width: 200px;
   }
+  .type-select:focus { border-color: var(--primary); }
   .flex { flex: 1; }
   .tool {
     border: 1px solid var(--border);
     background: transparent;
     color: var(--text);
     border-radius: 8px;
-    padding: 4px 12px;
+    padding: 4px 10px;
     font-size: 12px;
     cursor: pointer;
     transition: filter .15s;
+    white-space: nowrap;
   }
   .tool:hover { filter: brightness(.95); background: var(--primary-soft); border-color: var(--primary); }
   .tool.primary { background: linear-gradient(135deg, #2f7bff, #006eff); color: #fff; border: none; font-weight: 600; }
+  .tool.accent { background: var(--primary-soft); color: var(--primary); border-color: var(--primary); font-weight: 600; }
+  .tool[hidden] { display: none; }
   .main-content {
     flex: 1;
     display: flex;
     gap: 12px;
-    padding: 0 16px;
+    padding: 0 14px;
     min-height: 0;
   }
   .img-box {
-    width: 46%;
-    max-width: 320px;
+    width: 44%;
+    max-width: 300px;
     flex: none;
     border: 1px dashed var(--border);
     border-radius: var(--radius);
@@ -101,29 +112,88 @@
     cursor: pointer;
   }
   .right-box { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-  .right-box textarea {
-    flex: 1;
+  .result-toolbar {
+    display: flex;
+    gap: 6px;
+    padding: 0 0 8px;
+    flex-wrap: wrap;
+  }
+  .result-toolbar[hidden] { display: none; }
+  .result-toolbar .tool { padding: 3px 8px; font-size: 11px; }
+  .result-area { flex: 1; min-height: 0; position: relative; }
+  .result-area > * { position: absolute; inset: 0; }
+  .result-area > * [hidden] { display: none; }
+  .result-area textarea {
     width: 100%;
+    height: 100%;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: transparent;
     color: var(--text);
     padding: 12px;
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1.6;
     resize: none;
     outline: none;
     font-family: inherit;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
-  .right-box textarea:focus { border-color: var(--primary); }
+  .result-area textarea:focus { border-color: var(--primary); }
+  .table-preview {
+    width: 100%;
+    height: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    overflow: auto;
+    background: transparent;
+  }
+  .table-preview table { width: 100%; border-collapse: collapse; }
+  .table-preview td {
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  .fields-list {
+    width: 100%;
+    height: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    overflow-y: auto;
+    background: transparent;
+  }
+  .field-item {
+    display: flex;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .field-item:last-child { border-bottom: none; }
+  .field-item .fk {
+    color: var(--text-sub);
+    flex: 0 0 auto;
+    max-width: 45%;
+    word-break: break-word;
+  }
+  .field-item .fv {
+    color: var(--text);
+    flex: 1;
+    word-break: break-word;
+  }
   .status {
-    padding: 8px 16px 12px;
+    padding: 6px 14px 10px;
     font-size: 12px;
     color: var(--text-sub);
     min-height: 18px;
   }
   .status.error { color: var(--danger); }
-  .status.ok { color: #2bb673; }
+  .status.ok { color: var(--ok); }
   /* modals */
   .mask {
     position: fixed;
@@ -160,8 +230,6 @@
     outline: none;
   }
   .modal input:focus { border-color: var(--primary); }
-  .modal .radios { display: flex; gap: 16px; margin-top: 6px; font-size: 13px; }
-  .modal .radios label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
   .modal .check-row { margin-top: 10px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
   .modal-actions { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
   /* toast */
@@ -190,15 +258,20 @@
   .hist-item:hover { border-color: var(--primary); }
   .hist-item .h-result { font-size: 12px; white-space: pre-wrap; word-break: break-word; max-height: 80px; overflow: hidden; }
   .hist-item .h-time { font-size: 10px; color: var(--text-sub); margin-top: 4px; }
+  .hist-item .h-type { font-size: 10px; color: var(--primary); margin-bottom: 4px; font-weight: 600; }
 </style>
 </head>
 <body>
   <div class="app">
     <div class="head-menu">
-      <span class="type-title" id="typeTitle">高精度文字识别</span>
+      <select id="typeSelect" class="type-select"></select>
       <span class="flex"></span>
       <button class="tool" id="captureBtn" hidden>截图</button>
       <button class="tool" id="copyBtn" hidden>复制</button>
+      <button class="tool accent" id="copyExcelBtn" hidden>复制为 Excel</button>
+      <button class="tool" id="copyMdBtn" hidden>复制为 MD</button>
+      <button class="tool" id="copyCsvBtn" hidden>复制为 CSV</button>
+      <button class="tool" id="copyJsonBtn" hidden>复制为 JSON</button>
       <button class="tool" id="mergeBtn" hidden>合并行</button>
       <button class="tool" id="histBtn" hidden>历史</button>
       <button class="tool" id="settingBtn">设置</button>
@@ -214,7 +287,11 @@
         <button class="clear-img" id="clearImg" hidden>✕ 清除</button>
       </div>
       <div class="right-box">
-        <textarea id="result" placeholder="识别结果将显示在这里…"></textarea>
+        <div class="result-area">
+          <textarea id="result" placeholder="识别结果将显示在这里…"></textarea>
+          <div id="resultTable" class="table-preview" hidden></div>
+          <div id="resultFields" class="fields-list" hidden></div>
+        </div>
       </div>
     </div>
     <div class="status" id="status"></div>
@@ -243,11 +320,8 @@
         <option value="na-ashburn">弗吉尼亚</option>
         <option value="eu-frankfurt">法兰克福</option>
       </datalist>
-      <label class="field">识别类型</label>
-      <div class="radios">
-        <label><input type="radio" name="rtype" value="print" /> 高精度文字识别（印刷体）</label>
-        <label><input type="radio" name="rtype" value="handwrite" /> 通用手写体识别</label>
-      </div>
+      <label class="field">默认识别类型</label>
+      <select id="cfgType" class="type-select" style="width:100%;padding:6px 10px"></select>
       <label class="check-row"><input type="checkbox" id="cfgHistory" /> 保存识别历史</label>
       <div class="modal-actions">
         <button class="tool" id="testBtn">测试连接</button>
@@ -320,12 +394,15 @@
     defaults.secretId = window.TC_OCR_CONFIG.secretId || '';
     defaults.secretKey = window.TC_OCR_CONFIG.secretKey || '';
     defaults.region = window.TC_OCR_CONFIG.region || 'ap-guangzhou';
-    defaults.type = window.TC_OCR_CONFIG.type === 'handwrite' ? 'handwrite' : 'print';
+    if (window.TC_OCR_CONFIG.type && window.tcOcr && window.tcOcr.TYPES[window.TC_OCR_CONFIG.type]) {
+      defaults.type = window.TC_OCR_CONFIG.type;
+    }
   }
 
   var config = Object.assign({}, defaults, dbGet(CFG_KEY, {}));
   var historys = Array.isArray(dbGet(HIST_KEY, [])) ? dbGet(HIST_KEY, []) : [];
-  var currentSrc = ''; // dataURL or file path for history preview
+  var currentSrc = '';
+  var currentResp = null; // 最近一次识别的原始响应
 
   /* ---------- utils ---------- */
   var toastTimer = null;
@@ -359,19 +436,158 @@
   }
   function clearImg() {
     currentSrc = '';
+    currentResp = null;
     document.getElementById('img').hidden = true;
     document.getElementById('placeholder').style.display = '';
     document.getElementById('clearImg').hidden = true;
     document.getElementById('imgBox').classList.remove('has-img');
   }
-  function setResult(txt) {
-    document.getElementById('result').value = txt;
-    document.getElementById('copyBtn').hidden = !txt;
-    document.getElementById('mergeBtn').hidden = !txt;
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
+
+  function typeCfg() {
+    return (window.tcOcr && window.tcOcr.TYPES[config.type]) || { label: '高精度文字识别', kind: 'text', category: '文字' };
+  }
+
+  /* ---------- result display ---------- */
+  function showResultByType(resp) {
+    var cfg = typeCfg();
+    currentResp = resp;
+    var textarea = document.getElementById('result');
+    var tableEl = document.getElementById('resultTable');
+    var fieldsEl = document.getElementById('resultFields');
+    textarea.hidden = false;
+    tableEl.hidden = true;
+    fieldsEl.hidden = true;
+
+    var txt = '';
+    if (cfg.kind === 'text') {
+      txt = window.tcOcr.textOf(resp);
+      textarea.value = txt;
+    } else if (cfg.kind === 'table') {
+      var html = window.tcOcr.tableToHtml(resp);
+      var csv = window.tcOcr.tableToCsv(resp);
+      textarea.value = csv; // textarea 里放 CSV 方便直接看
+      tableEl.innerHTML = html;
+      tableEl.hidden = false;
+      textarea.hidden = true;
+    } else if (cfg.kind === 'structured') {
+      var fields = window.tcOcr.fieldsOf(resp);
+      txt = window.tcOcr.fieldsToText(fields);
+      textarea.value = txt;
+      fieldsEl.innerHTML = fields.map(function (f) {
+        return '<div class="field-item"><div class="fk">' + escapeHtml(f.key) + '</div><div class="fv">' + escapeHtml(f.value) + '</div></div>';
+      }).join('') || '<div style="color:var(--text-sub);text-align:center;padding:20px">无字段</div>';
+      fieldsEl.hidden = false;
+      textarea.hidden = true;
+    }
+    updateToolbarVisibility();
+    return txt;
+  }
+
+  function updateToolbarVisibility() {
+    var cfg = typeCfg();
+    var hasResult = currentResp != null;
+    document.getElementById('copyBtn').hidden = !hasResult;
+    document.getElementById('mergeBtn').hidden = !hasResult || cfg.kind !== 'text';
+    document.getElementById('copyExcelBtn').hidden = !hasResult || cfg.kind !== 'table';
+    document.getElementById('copyMdBtn').hidden = !hasResult || cfg.kind !== 'table';
+    document.getElementById('copyCsvBtn').hidden = !hasResult || cfg.kind !== 'table';
+    document.getElementById('copyJsonBtn').hidden = !hasResult || (cfg.kind !== 'table' && cfg.kind !== 'structured');
+  }
+
   function applyTypeTitle() {
-    document.getElementById('typeTitle').textContent =
-      config.type === 'handwrite' ? '通用手写体识别' : '高精度文字识别';
+    // 类型下拉框的选中项已由 select 本身显示，无需额外 title
+    var sel = document.getElementById('typeSelect');
+    if (sel && sel.value !== config.type) sel.value = config.type;
+    var cfgSel = document.getElementById('cfgType');
+    if (cfgSel && cfgSel.value !== config.type) cfgSel.value = config.type;
+  }
+
+  /* ---------- copy actions ---------- */
+  function doCopy() {
+    var cfg = typeCfg();
+    var textarea = document.getElementById('result');
+    var txt = textarea.value;
+    if (cfg.kind === 'table') {
+      var html = window.tcOcr.tableToHtml(currentResp);
+      var csv = window.tcOcr.tableToCsv(currentResp);
+      // 富文本剪贴板：Excel/Word 粘 HTML，其他粘纯文本
+      if (window.tcOcr.copyRich(html, csv)) {
+        toast('已复制表格（粘 Excel 自动识别）');
+      } else {
+        window.tcOcr.copyText(csv);
+        toast('已复制（纯文本）');
+      }
+    } else if (cfg.kind === 'structured') {
+      window.tcOcr.copyText(txt);
+      toast('已复制');
+    } else {
+      if (typeof window.copyText === 'function') window.copyText(txt);
+      else if (window.tcOcr.copyText) window.tcOcr.copyText(txt);
+      else if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(function () {});
+      toast('已复制');
+    }
+  }
+  function doCopyExcel() {
+    if (!currentResp) return;
+    var html = window.tcOcr.tableToHtml(currentResp);
+    var csv = window.tcOcr.tableToCsv(currentResp);
+    if (window.tcOcr.copyRich(html, csv)) {
+      toast('已复制为 Excel 格式，粘到 Excel/WPS 自动识别为表格');
+    } else {
+      window.tcOcr.copyText(csv);
+      toast('已复制（纯文本 CSV，可直接粘 Excel）');
+    }
+  }
+  function doCopyMd() {
+    if (!currentResp) return;
+    var md = window.tcOcr.tableToMarkdown(currentResp);
+    window.tcOcr.copyText(md);
+    toast('已复制为 Markdown 表格');
+  }
+  function doCopyCsv() {
+    if (!currentResp) return;
+    var csv = window.tcOcr.tableToCsv(currentResp);
+    window.tcOcr.copyText(csv);
+    toast('已复制为 CSV（含 BOM，Excel 直接打开）');
+  }
+  function doCopyJson() {
+    if (!currentResp) return;
+    var cfg = typeCfg();
+    var json;
+    if (cfg.kind === 'table') {
+      json = window.tcOcr.tableToJson(currentResp);
+    } else {
+      var fields = window.tcOcr.fieldsOf(currentResp);
+      json = window.tcOcr.fieldsToJson(fields);
+    }
+    window.tcOcr.copyText(json);
+    toast('已复制为 JSON');
+  }
+
+  /* ---------- type selector ---------- */
+  function buildTypeSelect(sel) {
+    var types = window.tcOcr.TYPES;
+    var categories = {};
+    for (var key in types) {
+      var t = types[key];
+      if (!categories[t.category]) categories[t.category] = [];
+      categories[t.category].push({ value: key, label: t.label });
+    }
+    var html = '';
+    for (var cat in categories) {
+      html += '<optgroup label="' + escapeHtml(cat) + '">';
+      for (var i = 0; i < categories[cat].length; i++) {
+        var item = categories[cat][i];
+        html += '<option value="' + item.value + '">' + escapeHtml(item.label) + '</option>';
+      }
+      html += '</optgroup>';
+    }
+    sel.innerHTML = html;
   }
 
   /* ---------- recognize ---------- */
@@ -391,10 +607,11 @@
       imageBase64: b64,
       type: config.type,
     }).then(function (resp) {
-      var txt = window.tcOcr.textOf(resp);
-      setResult(txt);
-      setStatus(txt ? '识别完成' : '识别完成（无文字）', 'ok');
-      if (config.history && txt) pushHistory(currentSrc, txt);
+      var txt = showResultByType(resp);
+      var kind = typeCfg().kind;
+      var hasContent = kind === 'text' ? !!txt : (kind === 'table' ? (resp.Cells && resp.Cells.length) : (window.tcOcr.fieldsOf(resp).length > 0));
+      setStatus(hasContent ? '识别完成' : '识别完成（无内容）', 'ok');
+      if (config.history && hasContent) pushHistory(currentSrc, JSON.stringify(resp));
     }).catch(function (e) {
       setStatus('');
       toast('识别失败：' + (e && e.message || e), true);
@@ -419,10 +636,11 @@
         imageBase64: b64,
         type: config.type,
       }).then(function (resp) {
-        var txt = window.tcOcr.textOf(resp);
-        setResult(txt);
-        setStatus(txt ? '识别完成' : '识别完成（无文字）', 'ok');
-        if (config.history && txt) pushHistory(filePath, txt);
+        var txt = showResultByType(resp);
+        var kind = typeCfg().kind;
+        var hasContent = kind === 'text' ? !!txt : (kind === 'table' ? (resp.Cells && resp.Cells.length) : (window.tcOcr.fieldsOf(resp).length > 0));
+        setStatus(hasContent ? '识别完成' : '识别完成（无内容）', 'ok');
+        if (config.history && hasContent) pushHistory(filePath, JSON.stringify(resp));
       }).catch(function (e) {
         setStatus('');
         toast('识别失败：' + (e && e.message || e), true);
@@ -435,7 +653,7 @@
 
   /* ---------- history ---------- */
   function pushHistory(src, result) {
-    var item = { src: src, result: result, time: new Date().toLocaleString() };
+    var item = { src: src, result: result, type: config.type, time: new Date().toLocaleString() };
     historys = [item].concat(historys);
     if (historys.length > (config.historyLength || 10)) historys = historys.slice(0, config.historyLength);
     dbSet(HIST_KEY, historys);
@@ -448,13 +666,12 @@
       return;
     }
     el.innerHTML = historys.map(function (h, i) {
+      var tLabel = (window.tcOcr && window.tcOcr.TYPES[h.type] && window.tcOcr.TYPES[h.type].label) || h.type || '文字';
       return '<div class="hist-item" data-i="' + i + '">' +
+        '<div class="h-type">' + escapeHtml(tLabel) + '</div>' +
         '<div class="h-result">' + escapeHtml(h.result) + '</div>' +
         '<div class="h-time">' + escapeHtml(h.time) + ' · 点击恢复</div></div>';
     }).join('');
-  }
-  function escapeHtml(s) {
-    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   /* ---------- image input ---------- */
@@ -471,13 +688,22 @@
       window.rubick.onPluginEnter(function (data) {
         data = data || {};
         var payload = data.payload;
+        // 支持通过 feature code 覆盖识别类型（如 data.code = 'table' / 'invoice'）
+        var codeToCheck = data.code || (data.ext && data.ext.code);
+        if (codeToCheck && window.tcOcr.TYPES[codeToCheck]) {
+          config.type = codeToCheck;
+          applyTypeTitle();
+        }
+        // 支持通过 payload 覆盖识别类型（如 data.payload = { type: 'table' }）
+        if (payload && typeof payload === 'object' && payload.type && window.tcOcr.TYPES[payload.type]) {
+          config.type = payload.type;
+          applyTypeTitle();
+        }
         if (data.type === 'files' && Array.isArray(payload) && payload.length) {
           var f = payload[0];
           if (f && f.path) {
             setStatus('识别中…');
-            try {
-              setImg('file://' + f.path);
-            } catch (e) {}
+            try { setImg('file://' + f.path); } catch (e) {}
             recognizeFromFilePath(f.path);
           }
           return;
@@ -487,20 +713,15 @@
           recognizeFromDataUrl(payload);
           return;
         }
-        // 纯文本进入：等待用户粘贴/拖拽/截图
         document.getElementById('result').focus();
       });
     }
     if (window.rubick.onPluginReady) {
       window.rubick.onPluginReady(function () {
-        // 首次就绪：主动设置窗口高度，即使窗口隐藏也会让 rubick 重建 view 尺寸
-        try { window.rubick.setExpendHeight(560); } catch (e) {}
-        // Electron/Chromium BrowserView 在窗口隐藏后可能不重绘（白屏），
-        // 在可见后再强制一次尺寸设置 + 回流，触发重绘。
+        try { window.rubick.setExpendHeight(580); } catch (e) {}
         repeatedlyRepaint();
       });
     }
-    // 截图按钮仅在 rubick 支持时显示
     if (window.rubick.screenCapture) {
       document.getElementById('captureBtn').hidden = false;
     }
@@ -512,18 +733,14 @@
     function kick() {
       attempts++;
       try {
-        // 强制一次回流，触发 Chromium 重排
         void document.body.offsetHeight;
-        // 设置窗口高度会让 rubick 主进程重建 BrowserView 尺寸 -> 强制重绘
-        if (hasRubick()) window.rubick.setExpendHeight(560);
+        if (hasRubick()) window.rubick.setExpendHeight(580);
       } catch (e) {}
       if (document.visibilityState === 'hidden' && attempts < 30) {
-        // 窗口还隐藏着（首次打开 rubick 常见），等它显示后再补一次尺寸更新
         __repaintTimer = setTimeout(kick, 200);
       }
     }
     kick();
-    // 无论窗口状态如何，再加几次稳妥的延迟兜底
     setTimeout(kick, 300);
     setTimeout(kick, 900);
     setTimeout(function () { __repaintTimer = null; }, 3000);
@@ -534,10 +751,7 @@
     document.getElementById('cfgId').value = config.secretId || '';
     document.getElementById('cfgKey').value = config.secretKey || '';
     document.getElementById('cfgRegion').value = config.region || 'ap-guangzhou';
-    var radios = document.querySelectorAll('input[name=rtype]');
-    for (var i = 0; i < radios.length; i++) {
-      radios[i].checked = radios[i].value === (config.type || 'print');
-    }
+    document.getElementById('cfgType').value = config.type || 'print';
     document.getElementById('cfgHistory').checked = !!config.history;
     document.getElementById('settingsMask').hidden = false;
   }
@@ -545,10 +759,7 @@
     config.secretId = document.getElementById('cfgId').value.trim();
     config.secretKey = document.getElementById('cfgKey').value.trim();
     config.region = document.getElementById('cfgRegion').value.trim() || 'ap-guangzhou';
-    var radios = document.querySelectorAll('input[name=rtype]');
-    for (var i = 0; i < radios.length; i++) {
-      if (radios[i].checked) config.type = radios[i].value;
-    }
+    config.type = document.getElementById('cfgType').value || 'print';
     config.history = document.getElementById('cfgHistory').checked;
     dbSet(CFG_KEY, config);
     applyTypeTitle();
@@ -627,7 +838,11 @@
     document.getElementById('clearImg').addEventListener('click', function (e) {
       e.stopPropagation();
       clearImg();
-      setResult('');
+      currentResp = null;
+      document.getElementById('result').value = '';
+      document.getElementById('resultTable').innerHTML = '';
+      document.getElementById('resultFields').innerHTML = '';
+      updateToolbarVisibility();
       setStatus('');
     });
     document.getElementById('captureBtn').addEventListener('click', function () {
@@ -638,14 +853,16 @@
         });
       }
     });
-    document.getElementById('copyBtn').addEventListener('click', function () {
-      var txt = document.getElementById('result').value;
-      if (!txt) return;
-      if (typeof window.copyText === 'function') window.copyText(txt);
-      else if (window.rubick && window.rubick.copyText) window.rubick.copyText(txt);
-      else if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(function () {});
-      toast('已复制');
+    document.getElementById('typeSelect').addEventListener('change', function () {
+      config.type = this.value;
+      dbSet(CFG_KEY, config);
+      updateToolbarVisibility();
     });
+    document.getElementById('copyBtn').addEventListener('click', doCopy);
+    document.getElementById('copyExcelBtn').addEventListener('click', doCopyExcel);
+    document.getElementById('copyMdBtn').addEventListener('click', doCopyMd);
+    document.getElementById('copyCsvBtn').addEventListener('click', doCopyCsv);
+    document.getElementById('copyJsonBtn').addEventListener('click', doCopyJson);
     document.getElementById('mergeBtn').addEventListener('click', function () {
       var area = document.getElementById('result');
       area.value = area.value.replace(/\n+/g, '');
@@ -675,17 +892,32 @@
       if (!item) return;
       var h = historys[parseInt(item.getAttribute('data-i'), 10)];
       if (!h) return;
+      if (h.type && window.tcOcr.TYPES[h.type]) {
+        config.type = h.type;
+        applyTypeTitle();
+      }
       if (h.src && /^data:/.test(h.src)) setImg(h.src);
-      setResult(h.result);
+      // 从历史恢复：根据类型重新解析
+      try {
+        var resp = JSON.parse(h.result);
+        showResultByType(resp);
+      } catch (err) {
+        // 历史存的是纯文本，直接显示
+        document.getElementById('result').value = h.result;
+        document.getElementById('resultTable').hidden = true;
+        document.getElementById('resultFields').hidden = true;
+        document.getElementById('result').hidden = false;
+      }
       document.getElementById('historyMask').hidden = true;
     });
   }
 
   function init() {
+    buildTypeSelect(document.getElementById('typeSelect'));
+    buildTypeSelect(document.getElementById('cfgType'));
     applyTypeTitle();
     document.getElementById('histBtn').hidden = !historys.length;
-    document.getElementById('copyBtn').hidden = true;
-    document.getElementById('mergeBtn').hidden = true;
+    updateToolbarVisibility();
     bindEvents();
     bindRubickHooks();
   }
