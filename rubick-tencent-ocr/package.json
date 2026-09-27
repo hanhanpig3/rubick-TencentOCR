@@ -35,9 +35,6 @@
     "CHANGELOG.md",
     "LICENSE"
   ],
-  "scripts": {
-    "publish": "npm publish --access public"
-  },
 
   "rubick": {
     "name": "腾讯OCR",
