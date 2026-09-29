@@ -1,3 +1,7 @@
+> ⚠️ **项目已停止维护 (Unmaintained)**  
+> 本仓库已归档并停止更新。代码仅供参考，欢迎自行 Fork。该项目已经随其他插件一同合并至 rubick-plugins-main 仓库，需要的可以自行拉取。
+
+
 # 腾讯OCR · rubick 插件 (rubick-tencent-ocr)
 
 一个 [rubick](https://github.com/rubickCenter/rubick) 腾讯云 OCR 插件：图片 / 截图识别文本并一键复制，可合并为一行、保存历史。
